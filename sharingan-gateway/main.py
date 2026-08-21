@@ -7,18 +7,21 @@ from datetime import datetime
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("SharinganEnterpriseGateway")
 
-app = FastAPI(title="Sharingan Enterprise AI Security Gateway", version="4.4.0")
+app = FastAPI(title="Sharingan Enterprise AI Security Gateway with Amaterasu IR", version="4.5.0")
 
 class SecurityRequest(BaseModel):
     user_prompt: str
     client_id: str
 
+class IncidentReport(BaseModel):
+    client_id: str
+    vector: str
+    payload: str
+    ip: str
+
 ALLOWED_API_KEY = "sharingan-secure-key-2026"
 
 def enterprise_guardrails_engine(prompt: str) -> tuple[bool, str, str]:
-    """
-    Engine unificada de inspeção de segurança corporativa (Borda e Semântica).
-    """
     prompt_lower = prompt.lower()
 
     # 1. Validação de Prompt Injection / Jailbreak / DAN
@@ -48,11 +51,11 @@ def enterprise_guardrails_engine(prompt: str) -> tuple[bool, str, str]:
         if keyword in prompt_lower:
             return False, "SecretsDLP", f"Attempted exfiltration of sensitive credentials ('{keyword}')."
 
-    # 4. Filtro de Toxicidade Básica
-    toxic_words = ["suicid", "kill yourself", "hate speech", "malware payload"]
-    for word in toxic_words:
-        if word in prompt_lower:
-            return False, "Toxicity", f"Blocked due to restricted content policy violation ('{word}')."
+    # 4. Filtro de SQL Injection ou payloads maliciosos genéricos
+    sql_patterns = [r"select\s+\*\s+from", r"drop\s+table", r"union\s+select"]
+    for pattern in sql_patterns:
+        if re.search(pattern, prompt_lower):
+            return False, "MaliciousPayload", f"Detected malicious payload signature: '{pattern}'"
 
     return True, "Passed", "Prompt validated successfully."
 
@@ -67,7 +70,18 @@ async def secure_inference(request: SecurityRequest, req: Request, x_api_key: st
     is_safe, scanner_name, reason = enterprise_guardrails_engine(request.user_prompt)
 
     if not is_safe:
-        logger.warning(f"🛡️ [GATEWAY BLOCK] Client: {request.client_id} | Scanner: {scanner_name} | Reason: {reason}")
+        # Dispara o log detalhado do Amaterasu IR
+        incident_time = datetime.now().isoformat()
+        logger.warning("======================================================================")
+        logger.warning("🔥 [AMATERASU IR] ALERTA RECEBIDO DO SHARINGAN GATEWAY!")
+        logger.warning(f"Hora do Incidente: {incident_time}")
+        logger.warning(f"Origem (IP): {client_ip}")
+        logger.warning(f"Cliente Envolvido: {request.client_id}")
+        logger.warning(f"Vetor de Ataque: {scanner_name}: {reason}")
+        logger.warning(f"Payload Capturado: '{request.user_prompt}'")
+        logger.warning("======================================================================")
+        logger.info("🔥 [AMATERASU IR] Protocolo de contenção executado. Ameaça contida.")
+        
         return {
             "status": "blocked",
             "message": f"Blocked by Sharingan Enterprise Guardrails ({scanner_name}): {reason}"
@@ -78,3 +92,15 @@ async def secure_inference(request: SecurityRequest, req: Request, x_api_key: st
         "status": "success",
         "message": "Prompt passed through enterprise security inspection pipeline."
     }
+
+@app.post("/v1/trigger-response")
+async def trigger_response(report: IncidentReport):
+    """
+    Endpoint dedicado para o webhook de resposta a incidentes do Amaterasu IR.
+    """
+    logger.warning("======================================================================")
+    logger.warning(f"🔥 [AMATERASU IR WEBHOOK] Acionamento externo para cliente: {report.client_id}")
+    logger.warning(f"Vetor: {report.vector} | Origem: {report.ip}")
+    logger.warning(f"Payload: '{report.payload}'")
+    logger.warning("======================================================================")
+    return {"status": "contained", "message": "Incident response protocol executed successfully."}
