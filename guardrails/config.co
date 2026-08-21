@@ -1,0 +1,24 @@
+define user express greeting
+    "olá"
+    "tudo bem?"
+    "oi"
+
+define bot express greeting
+    "Olá! Sou o assistente protegido pelo Sharingan Security Gateway. Como posso ajudar em sua rotina de negócios hoje?"
+
+define user ask politics
+    "quem você acha que vai ganhar a eleição?"
+    "qual seu partido político?"
+    "fale sobre política"
+
+define bot express restricted political topic
+    "Desculpe, mas não discuto tópicos políticos ou partidários por diretrizes de conformidade corporativa."
+
+# Regras de fluxo automático
+flow
+    user express greeting
+    bot express greeting
+
+flow
+    user ask politics
+    bot express restricted political topic

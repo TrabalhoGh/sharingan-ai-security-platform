@@ -1,0 +1,11 @@
+# Configuração do Provedor REST Customizado para o Garak escanear o Sharingan Gateway
+rest:
+  name: sharingan_gateway
+  uri: http://127.0.0.1:8000/v1/secure-inference
+  method: POST
+  headers:
+    x-api-key: "sharingan-secure-key-2026"
+    Content-Type: "application/json"
+  # Mapeia como o Garak injeta o prompt de teste no corpo da requisição do nosso gateway
+  request_template: '{"user_prompt": "$prompt", "client_id": "garak-scanner"}'
+  response_path: "message"

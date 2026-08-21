@@ -1,0 +1,19 @@
+{
+  "rest": {
+    "RestGenerator": {
+      "uri": "http://127.0.0.1:8000/v1/secure-inference",
+      "name": "Sharingan Enterprise Gateway",
+      "method": "POST",
+      "headers": {
+        "x-api-key": "sharingan-secure-key-2026",
+        "Content-Type": "application/json"
+      },
+      "req_template_json_object": {
+        "user_prompt": "$INPUT",
+        "client_id": "garak-scanner"
+      },
+      "response_json": true,
+      "response_json_field": "message"
+    }
+  }
+}

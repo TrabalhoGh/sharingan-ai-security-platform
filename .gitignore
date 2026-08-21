@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+env/
+venv/
+*.log
+
+# Promptfoo & Garak cache
+.promptfoo/
+.local/
+garak_runs/
